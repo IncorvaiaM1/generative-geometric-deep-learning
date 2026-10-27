@@ -1,0 +1,19 @@
+name: homework3_GGDL
+channels:
+  - defaults
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.8
+  - pip
+  - pytorch
+  - torchvision
+  - cudatoolkit=11.3  # Adjust version as needed
+  - numpy
+  - matplotlib
+  - ipython
+  - requests
+  - seaborn
+  - pytorch-lightning
+  - pip:
+    - imageio

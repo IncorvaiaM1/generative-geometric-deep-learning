@@ -1,0 +1,233 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{GDL-Bench Challenge Problem (20 points)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{question}
+As part of each homework, you will contribute one candidate problem to GDL-Bench, a benchmark for evaluating the reasoning capabilities of current AI systems in generative and geometric deep learning. For this homework, design one original challenge problem related to one or more of the topics covered in this assignment. The problem should require genuine mathematical, conceptual, algorithmic, or implementation-level reasoning, and should not be answerable by simply recalling a definition or looking up a fact.
+\begin{enumerate}
+  \item[(a)] \textbf{Challenge problem.} Write the exact problem as you would like it to appear in GDL-Bench. It must be original, self-contained, technically well-defined, and unambiguous.
+  \item[(b)] \textbf{Gold answer and solution.} Provide the correct final answer together with a concise but complete solution, enough for another student or instructor to independently verify the answer. Whenever possible, design the problem so that the final answer can be objectively checked.
+  \item[(c)] \textbf{What does the problem test?} Topic; problem type (derivation, conceptual reasoning, counterexample, numerical, coding/debugging, algorithm design, or other); and the core insight in 1--3 sentences, including why a solver with only superficial knowledge might struggle.
+  \item[(d)] \textbf{Test AI systems.} Only after the problem and solution are finalized, give the exact same problem to at least two current AI models, with no extra hints and without the solution. For each model report the name/version, whether the answer was Correct, Partially Correct, or Incorrect, and a 1--3 sentence explanation of any important error. A problem does not need to defeat the models to receive full credit.
+\end{enumerate}
+Quality bar: original, relevant, self-contained, unambiguous, verifiable, and reasoning-intensive. Grading: relevance and originality (4); technical correctness (6); clarity (4); depth of reasoning (4); complete metadata and AI evaluation (2).
+\end{question}
+
+The full, agent-runnable version of this problem (task statement, reference
+solution, and automated tests) is in \texttt{gdlbench\_submission/}. The
+statement below is the text of \texttt{task/TASK.md}.
+
+\subsection{(a) Challenge problem}
+
+\textbf{Which generator does each GAN objective prefer?}
+
+All logarithms are natural, and all distributions live on the nonnegative
+integers. The data distribution \(p\) is uniform on \(\{0,1,2,3\}\). For each
+positive integer \(k\), the generator distribution \(q_k\) is uniform on
+\(\{0,1,\dots,k-1\}\). Conventions: \(\log 0=-\infty\),
+\(0\cdot(\pm\infty)=0\), and an expectation that puts positive probability on
+an integrand equal to \(+\infty\) is \(+\infty\).
+
+\medskip\noindent\textbf{Definitions.}
+\begin{itemize}
+  \item \(\mathrm{JSD}(p,q)=\tfrac12\KL(p\|m)+\tfrac12\KL(q\|m)\), with \(m=(p+q)/2\).
+  \item \emph{Minimax GAN.} For a discriminator \(D\) mapping integers to \([0,1]\),
+  \[
+    V(D,q)=\E_{x\sim p}[\log D(x)]+\E_{x\sim q}[\log(1-D(x))].
+  \]
+  Let \(D^*_q\) maximize \(V(D,q)\) (its values off the support of \(p+q\) do
+  not matter), and define
+  \[
+    V_\star(q)=V(D^*_q,q),\qquad
+    L_{\mathrm{MM}}(q)=\E_{x\sim q}[\log(1-D^*_q(x))],\qquad
+    L_{\mathrm{NS}}(q)=\E_{x\sim q}[-\log D^*_q(x)].
+  \]
+  \item \emph{Least-squares GAN} with labels \(a=-1\) (generated), \(b=1\)
+  (real), and generator target \(c=0\). The discriminator \(D^{\mathrm{LS}}_q\)
+  minimizes \(\tfrac12\E_p[(D-1)^2]+\tfrac12\E_q[(D+1)^2]\) over real-valued
+  \(D\), and the generator criterion is
+  \[
+    V_{\mathrm{LS}}(q)=\tfrac12\E_{x\sim p}\bigl[(D^{\mathrm{LS}}_q(x)-0)^2\bigr]
+    +\tfrac12\E_{x\sim q}\bigl[(D^{\mathrm{LS}}_q(x)-0)^2\bigr].
+  \]
+\end{itemize}
+The generator wants each of \(V_\star\), \(L_{\mathrm{MM}}\),
+\(L_{\mathrm{NS}}\), and \(V_{\mathrm{LS}}\) to be as small as possible.
+
+\medskip\noindent\textbf{Report:}
+\begin{enumerate}
+  \item \texttt{jsd\_tie\_pairs}: every unordered pair \(\{j,k\}\) of distinct
+        positive integers with \(\mathrm{JSD}(p,q_j)=\mathrm{JSD}(p,q_k)\) exactly.
+  \item \texttt{ls\_tie\_pairs}: every unordered pair \(\{j,k\}\) of distinct
+        positive integers with \(V_{\mathrm{LS}}(q_j)=V_{\mathrm{LS}}(q_k)\) exactly.
+  \item \texttt{ls\_value\_q2}: the value of \(V_{\mathrm{LS}}(q_2)\).
+  \item \texttt{k\_hat}: the integer \(\hat k\neq2\) such that \(\{2,\hat k\}\)
+        is in \texttt{jsd\_tie\_pairs}, or \texttt{null} if there is none.
+  \item If \(\hat k\) exists: the values of \(V_\star\), \(L_{\mathrm{MM}}\),
+        and \(L_{\mathrm{NS}}\) at \(q_2\) and at \(q_{\hat k}\).
+  \item If \(\hat k\) exists: for each of \(V_\star\), \(L_{\mathrm{MM}}\),
+        \(L_{\mathrm{NS}}\), which of \(q_2\) and \(q_{\hat k}\) the generator
+        prefers (lower value), or \texttt{"tie"}.
+\end{enumerate}
+The solver also writes a short derivation that justifies why the lists in
+items 1 and 2 are \emph{complete}. Answers go in
+\texttt{task/results/answer.json}, with \(+\infty\) written as the string
+\texttt{"inf"} and floats to at least 10 significant figures. Pair lists,
+\(\hat k\), \texttt{"inf"}, and preferences must match exactly; floats must be
+within \(10^{-8}\).
+
+\subsection{(b) Gold answer and solution}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Key & Gold answer & Value\\
+\midrule
+\texttt{jsd\_tie\_pairs} & \(\{1,16\},\ \{2,8\}\) & \\
+\texttt{ls\_tie\_pairs} & \(\{1,16\},\ \{2,8\}\) & \\
+\texttt{ls\_value\_q2} & \(1/3\) & \(0.333333\)\\
+\texttt{k\_hat} & \(8\) & \\
+\(V_\star(q_2)=V_\star(q_8)\) & \(\log2-\tfrac32\log3\) & \(-0.954771\)\\
+\(L_{\mathrm{MM}}(q_2)\) & \(\log(2/3)\) & \(-0.405465\)\\
+\(L_{\mathrm{MM}}(q_8)\) & \(-\tfrac12\log3\) & \(-0.549306\)\\
+\(L_{\mathrm{NS}}(q_2)\) & \(\log3\) & \(1.098612\)\\
+\(L_{\mathrm{NS}}(q_8)\) & \(+\infty\) & \\
+\texttt{prefers} & \multicolumn{2}{l}{\(V_\star\): tie;\quad \(L_{\mathrm{MM}}\): \(q_8\);\quad \(L_{\mathrm{NS}}\): \(q_2\)}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Both criteria depend only on a support ratio.} The distributions
+\(p\) and \(q_k\) are nested uniforms. Let the smaller one have support size
+\(n\) and the larger one \(N\), and let \(r=N/n=\max(k,4)/\min(k,4)\ge1\). On
+the shared support \(m=(r+1)/(2N)\); off it, \(m=1/(2N)\). Then
+\[
+  \KL(\text{small}\|m)=\log\frac{2r}{r+1},\qquad
+  \KL(\text{large}\|m)=\frac1r\log\frac{2}{r+1}+\Bigl(1-\frac1r\Bigr)\log2,
+\]
+so
+\[
+  \mathrm{JSD}(r)=\log2+\tfrac12\log r-\tfrac12\Bigl(1+\tfrac1r\Bigr)\log(1+r),
+  \qquad
+  \frac{d\,\mathrm{JSD}}{dr}=\frac{\log(1+r)}{2r^2}>0 .
+\]
+JSD is symmetric, so it does not matter which of \(p\) and \(q_k\) is the
+larger one. JSD is therefore a strictly increasing function of \(r\) alone,
+and \(\mathrm{JSD}(p,q_j)=\mathrm{JSD}(p,q_k)\) holds iff \(r_j=r_k\). For
+\(j\neq k\) this needs one index below 4 and one above it, with \(4/j=k/4\),
+i.e.\ \(jk=16\). The only integer solutions are \(\{1,16\}\) and \(\{2,8\}\)
+(\(j=3\) gives \(16/3\)). The argument covers every positive integer, so the
+list is complete, and \(\hat k=8\).
+
+\paragraph{LSGAN.} Minimizing \(\tfrac12p(D-1)^2+\tfrac12q(D+1)^2\) pointwise
+gives \(D^{\mathrm{LS}}=(p-q)/(p+q)\). Substituting,
+\[
+  V_{\mathrm{LS}}=\frac12\sum_x\frac{(p-q)^2}{p+q}
+  =\frac12\Bigl[\frac{(r-1)^2}{r(r+1)}+\frac{r-1}{r}\Bigr]
+  =\frac{r-1}{r+1},
+\]
+which is also strictly increasing in \(r\) alone. The tie pairs are the same,
+and \(V_{\mathrm{LS}}(q_2)=1/3\).
+
+\paragraph{Why the ties happen.} An \(f\)-divergence depends only on the
+distribution of the likelihood ratio \(p/q\). The pair \((p,q_2)\) has the
+same ratio structure as \((q_8,p)\): a uniform against a uniform on half its
+support. Hence \(D_f(p\|q_2)=D_g(p\|q_8)\) with the reversed generator
+\(g(u)=u\,f(1/u)\). Every symmetric \(f\)-divergence (JSD, the LSGAN
+\(\chi^2\)-type term) must tie on this pair. Only asymmetric ones can tell
+mode dropping (\(q_2\)) apart from over-spreading (\(q_8\)).
+
+\paragraph{GAN terms.} \(D^*=p/(p+q)\).
+\begin{itemize}
+  \item \(q_2\): \(D^*=1/3\) on \(\{0,1\}\), \(D^*=1\) on \(\{2,3\}\).
+  Then \(V_\star=\tfrac12\log\tfrac13+\log\tfrac23=\log2-\tfrac32\log3\),
+  \(L_{\mathrm{MM}}=\log\tfrac23\), and \(L_{\mathrm{NS}}=\log3\).
+  \item \(q_8\): \(D^*=2/3\) on \(\{0,\dots,3\}\), \(D^*=0\) on \(\{4,\dots,7\}\).
+  Then \(V_\star=\log\tfrac23+\tfrac12\log\tfrac13+\tfrac12\log1=\log2-\tfrac32\log3\),
+  \(L_{\mathrm{MM}}=\tfrac12\log\tfrac13=-\tfrac12\log3\), and
+  \(L_{\mathrm{NS}}=\tfrac12\log\tfrac32+\tfrac12(+\infty)=+\infty\).
+\end{itemize}
+\(V_\star=2\,\mathrm{JSD}-\log4\) ties, as it must. The generator's own minimax
+term does \emph{not} tie: the \(\E_p[\log D^*]\) term also depends on \(q\)
+through \(D^*\), and dropping it leaves a quantity that favors \(q_8\). The
+non-saturating loss is infinite for any generator that puts mass where the
+data has none, so it favors \(q_2\), the generator that drops modes. The same
+game value gives three different verdicts.
+
+\paragraph{Verification.} \texttt{gt\_code/reference\_solution.py} evaluates
+every quantity directly from the distributions (exact fractions wherever no
+logarithm is involved), scans \(k=1,\dots,512\) for ties, and asserts
+agreement with the closed forms and with \(V_\star=2\,\mathrm{JSD}-\log4\).
+\texttt{tests/test\_solution.py} passes 8/8 on the gold answer, and each of
+the following mistakes fails at least one test:
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Mistake & Fails\\
+\midrule
+Report only \(\{2,8\}\) (miss the pair below 4) & \texttt{test\_jsd\_tie\_pairs}\\
+Treat \(L_{\mathrm{MM}}\) like \(V_\star\) (claim it ties) & \texttt{test\_q\_k\_hat\_terms}, \texttt{test\_prefers}\\
+Assume non-saturating has the same optimum (``tie'') & \texttt{test\_prefers}\\
+Drop the \(\tfrac12\) in \(V_{\mathrm{LS}}\) (report \(2/3\)) & \texttt{test\_ls\_value\_q2}\\
+Finite \(L_{\mathrm{NS}}(q_8)\) (ignore \(D^*=0\) off the data support) & \texttt{test\_q\_k\_hat\_terms}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{(c) What does the problem test?}
+
+\begin{itemize}
+  \item \textbf{Topic:} GAN objectives and the divergences they minimize
+        (minimax/JSD, non-saturating loss, LSGAN/Pearson-type \(\chi^2\)),
+        mode dropping vs.\ mode covering.
+  \item \textbf{Problem type:} derivation, conceptual reasoning, and
+        counterexample.
+  \item \textbf{Core insight:} symmetric \(f\)-divergences such as JSD and
+        the LSGAN criterion depend only on the support ratio, so they cannot
+        distinguish dropping half the modes from spreading over twice the
+        support; the map \(k\mapsto16/k\) produces exactly the ties. A solver
+        with only surface knowledge repeats that ``GANs penalize mode
+        collapse'' and treats the game value, the minimax generator term, and
+        the non-saturating loss as interchangeable, when in fact they give
+        three different preferences on the same pair.
+\end{itemize}
+
+\subsection{(d) Testing AI systems}
+
+Each model ran as a coding agent in Cursor, given only \texttt{task/} in a
+fresh workspace and the same fixed prompt (no hints, no internet lookup of
+the problem, no access to tests or solutions). Each \texttt{answer.json} was
+graded with \texttt{tests/test\_solution.py}.
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Model (version) & Result & Tests passed\\
+\midrule
+Claude Opus 5.5 & Correct & 8/8\\
+GPT-5.6-sol & Correct & 8/8\\
+Grok 4.7 & Correct & 8/8\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+  \item \textbf{Claude Opus 5.5:} correct. It showed both criteria depend only
+        on the support ratio and are monotone in it, which reduces ties to
+        \(jk=16\). It also noted \(V_\star=2\,\mathrm{JSD}-\log4\) and
+        cross-checked by scanning \(k\le400\) with exact fractions.
+  \item \textbf{GPT-5.6-sol:} correct. It gave the same reduction to
+        \(u=\min(k/4,4/k)\) with an explicit derivative, and the cleanest
+        written derivation of the three.
+  \item \textbf{Grok 4.7:} correct, and the most thorough. It derived
+        separate closed forms on each side of \(k=4\), proved the identity
+        \(\varphi(16/j)=\mathrm{JSD}(p,q_j)\) explicitly, and compared
+        values exactly over \(k\le16\).
+\end{itemize}
+All three found the \(\{1,16\}\) pair, proved the tie lists complete, and
+separated \(V_\star\), \(L_{\mathrm{MM}}\), and \(L_{\mathrm{NS}}\) correctly.
+None fell into the anticipated traps. Current agentic models with code
+execution handle closed-form divergence calculations reliably, so this
+problem works best as a clean, verifiable check of the symmetric-divergence
+insight and of the difference between the three generator objectives, rather
+than as an item that breaks models.

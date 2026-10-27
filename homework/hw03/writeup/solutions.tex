@@ -1,0 +1,49 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+% Trained-run outputs (hw3_results) take priority over the original hw3-update copies.
+\graphicspath{{./}}
+
+% Homework prompt, set off from the writeup that follows.
+\newenvironment{question}{%
+  \par\addvspace{0.8em}%
+  \begin{quote}\small
+  \noindent\textbf{Question.}\enspace\ignorespaces
+}{%
+  \end{quote}%
+  \par\nopagebreak
+  \noindent\textbf{Response.}\par\nopagebreak\smallskip
+}
+
+% Placeholder for answers still to be written. Grep for \fillin before submitting.
+\newcommand{\fillin}[1]{\par\noindent{\color{red}\textbf{[TODO]} #1}\par}
+
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ind}{\mathbf{1}}
+
+\title{ECE 6257-GDL, Fall 2026\\Problem Set 3 Solutions}
+\author{Michael Incorvaia}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\input{problem1_gan}
+\newpage
+\input{problem2_ebm}
+\newpage
+\input{gdlbench}
+
+\end{document}
